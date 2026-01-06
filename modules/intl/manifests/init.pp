@@ -1,29 +1,29 @@
 # A Chassis extensions to add Php internationalisation to your Chassis server
+#
+# @param config Configuration hash for the extension
+# @param path Path to the extension directory
 class intl (
-	$config,
-	$path = '/vagrant/extensions/intl'
+  Hash $config,
+  String $path = '/vagrant/extensions/intl'
 ) {
+  if ( ! empty( $::config[disabled_extensions] ) and 'chassis/intl' in $config[disabled_extensions] ) {
+    $package = absent
+  } else {
+    $package = latest
+  }
 
-	apt::ppa { 'universe': }
+  $php = $config[php]
 
-	if ( ! empty( $::config[disabled_extensions] ) and 'chassis/intl' in $config[disabled_extensions] ) {
-		$package = absent
-	} else {
-		$package = latest
-	}
+  if versioncmp( $php, '5.4') <= 0 {
+    $php_package = 'php5'
+  }
+  else {
+    $php_package = "php${$php}"
+  }
 
-	$php = $config[php]
-
-	if versioncmp( $php, '5.4') <= 0 {
-		$php_package = 'php5'
-	}
-	else {
-		$php_package = "php${$php}"
-	}
-
-	package { "${$php_package}-intl":
-		ensure  => $package,
-		require => [ Package["${$php_package}-fpm"], Apt::Ppa['universe'] ],
-		notify  => Service["${$php_package}-fpm"]
-	}
+  package { "${$php_package}-intl":
+    ensure  => $package,
+    require => Package["${$php_package}-fpm"],
+    notify  => Service["${$php_package}-fpm"],
+  }
 }
